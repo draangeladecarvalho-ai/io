@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gravador + Leitura - Em Cristo, Minha Mente Descansa</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f7fafc;
+      color: #2d3748;
+      padding: 16px;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.45;
+      font-size: 15px;
+    }
+    h2 {
+      font-size: 1.2rem;
+      color: #1a365d;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #718096;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .box {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .box-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2b6cb0;
+      margin-bottom: 12px;
+    }
+    .status {
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: #edf2f7;
+      color: #4a5568;
+    }
+    .status.recording {
+      background: #fed7d7;
+      color: #c53030;
+      font-weight: 600;
+    }
+    .status.error {
+      background: #feebc8;
+      color: #c05621;
+    }
+    .status.success {
+      background: #c6f6d5;
+      color: #276749;
+    }
+    .timer {
+      text-align: center;
+      font-size: 1.4rem;
+      font-variant-numeric: tabular-nums;
+      color: #2b6cb0;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 11px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #btnStart { background: #2b6cb0; color: white; }
+    #btnStart:hover:not(:disabled) { background: #2c5282; }
+    #btnStop { background: #c53030; color: white; }
+    #btnStop:hover:not(:disabled) { background: #9b2c2c; }
+    #btnDownload { background: #38a169; color: white; }
+    #btnDownload:hover:not(:disabled) { background: #2f855a; }
+    #btnClear { background: #e2e8f0; color: #4a5568; }
+    #btnRead { background: #553c9a; color: white; }
+    #btnRead:hover:not(:disabled) { background: #44337a; }
+    #btnStopRead { background: #718096; color: white; }
+    audio {
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #2b6cb0;
+      box-shadow: 0 0 0 2px rgba(43,108,176,0.2);
+    }
+    .word-count {
+      font-size: 0.8rem;
+      color: #718096;
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    .word-count.over {
+      color: #c53030;
+      font-weight: 600;
+    }
+    .hint {
+      font-size: 0.78rem;
+      color: #718096;
+      text-align: center;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    .important {
+      background: #ebf8ff;
+      border: 1px solid #90cdf4;
+      color: #2b6cb0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Em Cristo, Minha Mente Descansa</h2>
+  <p class="subtitle">Grave ou ouça suas declarações</p>
+
+  <div class="important">
+    Para o gravador funcionar: abra este arquivo diretamente no navegador<br>
+    (não dentro do Google Sites) ou hospede em um link público.
+  </div>
+
+  <!-- GRAVADOR -->
+  <div class="box">
+    <div class="box-title">1. Gravador de Áudio</div>
+    <div id="status" class="status">Pronto para gravar</div>
+    <div id="timer" class="timer">00:00</div>
+    <div class="buttons">
+      <button id="btnStart">● Gravar</button>
+      <button id="btnStop" disabled>■ Parar</button>
+      <button id="btnDownload" disabled>↓ Baixar</button>
+      <button id="btnClear" disabled>Limpar</button>
+    </div>
+    <audio id="player" controls style="display:none;"></audio>
+    <p class="hint">
+      Clique em “Gravar” e permita o microfone quando o navegador pedir.<br>
+      Funciona melhor no Chrome ou Edge. Arquivo salvo em .webm
+    </p>
+  </div>
+
+  <!-- LEITURA (Text-to-Speech) -->
+  <div class="box">
+    <div class="box-title">2. Ler o que você escrever</div>
+    <textarea id="textToRead" placeholder="Cole ou escreva aqui a declaração (máximo 200 palavras)..."></textarea>
+    <div id="wordCount" class="word-count">0 / 200 palavras</div>
+    <div class="buttons">
+      <button id="btnRead">▶ Ler</button>
+      <button id="btnStopRead" disabled>■ Parar leitura</button>
+    </div>
+    <p class="hint">Usa a voz do próprio navegador. Não precisa de microfone.</p>
+  </div>
+
+  <script>
+    // ========== GRAVADOR ==========
+    let mediaRecorder;
+    let chunks = [];
+    let startTime;
+    let timerInterval;
+    let audioBlob;
+
+    const statusEl = document.getElementById('status');
+    const timerEl = document.getElementById('timer');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const btnDownload = document.getElementById('btnDownload');
+    const btnClear = document.getElementById('btnClear');
+    const player = document.getElementById('player');
+
+    function formatTime(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+
+    function updateTimer() {
+      timerEl.textContent = formatTime(Date.now() - startTime);
+    }
+
+    function setStatus(msg, type = '') {
+      statusEl.textContent = msg;
+      statusEl.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    btnStart.addEventListener('click', async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus('Seu navegador não suporta gravação de áudio. Use Chrome ou Edge.', 'error');
+        return;
+      }
+
+      // Aviso se estiver em iframe (Google Sites)
+      if (window.self !== window.top) {
+        setStatus('Este gravador não funciona dentro do Google Sites. Abra o arquivo HTML diretamente no navegador.', 'error');
+        return;
+      }
+
+      try {
+        setStatus('Pedindo permissão do microfone...');
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true
+          } 
+        });
+
+        mediaRecorder = new MediaRecorder(stream);
+        chunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) chunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          audioBlob = new Blob(chunks, { type: 'audio/webm' });
+          const url = URL.createObjectURL(audioBlob);
+          player.src = url;
+          player.style.display = 'block';
+          btnDownload.disabled = false;
+          btnClear.disabled = false;
+          stream.getTracks().forEach(t => t.stop());
+          setStatus('Gravação concluída. Você pode ouvir e baixar.', 'success');
+        };
+
+        mediaRecorder.onerror = () => {
+          setStatus('Erro durante a gravação.', 'error');
+        };
+
+        mediaRecorder.start(1000);
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 250);
+
+        setStatus('Gravando... Fale agora', 'recording');
+        btnStart.disabled = true;
+        btnStop.disabled = false;
+        btnDownload.disabled = true;
+        btnClear.disabled = true;
+        player.style.display = 'none';
+
+      } catch (err) {
+        console.error(err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setStatus('Permissão negada. Clique no ícone de cadeado/microfone na barra do navegador e permita o áudio.', 'error');
+        } else if (err.name === 'NotFoundError') {
+          setStatus('Nenhum microfone encontrado.', 'error');
+        } else {
+          setStatus('Não foi possível acessar o microfone. Tente no Chrome ou Edge.', 'error');
+        }
+      }
+    });
+
+    btnStop.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        clearInterval(timerInterval);
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+      }
+    });
+
+    btnDownload.addEventListener('click', () => {
+      if (!audioBlob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(audioBlob);
+      const nome = 'declaracao_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.webm';
+      a.download = nome;
+      a.click();
+    });
+
+    btnClear.addEventListener('click', () => {
+      chunks = [];
+      audioBlob = null;
+      player.src = '';
+      player.style.display = 'none';
+      timerEl.textContent = '00:00';
+      setStatus('Pronto para gravar');
+      btnDownload.disabled = true;
+      btnClear.disabled = true;
+    });
+
+    // ========== LEITURA (Text-to-Speech) ==========
+    const textToRead = document.getElementById('textToRead');
+    const wordCountEl = document.getElementById('wordCount');
+    const btnRead = document.getElementById('btnRead');
+    const btnStopRead = document.getElementById('btnStopRead');
+
+    function countWords(text) {
+      return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    }
+
+    textToRead.addEventListener('input', () => {
+      const words = countWords(textToRead.value);
+      wordCountEl.textContent = words + ' / 200 palavras';
+      wordCountEl.className = 'word-count' + (words > 200 ? ' over' : '');
+    });
+
+    btnRead.addEventListener('click', () => {
+      const text = textToRead.value.trim();
+      if (!text) {
+        alert('Escreva ou cole algum texto primeiro.');
+        return;
+      }
+      const words = countWords(text);
+      if (words > 200) {
+        alert('O texto tem mais de 200 palavras. Reduza um pouco para melhor leitura.');
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.92;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang.startsWith('pt')) || 
+                      voices.find(v => v.lang.includes('BR')) ||
+                      voices.find(v => v.lang.includes('PT'));
+      if (ptVoice) utterance.voice = ptVoice;
+
+      utterance.onstart = () => {
+        btnRead.disabled = true;
+        btnStopRead.disabled = false;
+      };
+      utterance.onend = () => {
+        btnRead.disabled = false;
+        btnStopRead.disabled = true;
+      };
+      utterance.onerror = () => {
+        btnRead.disabled = false;
+        btnStopRead.disabled = true;
+      };
+
+      window.speechSynthesis.speak(utterance);
+    });
+
+    btnStopRead.addEventListener('click', () => {
+      window.speechSynthesis.cancel();
+      btnRead.disabled = false;
+      btnStopRead.disabled = true;
+    });
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+  </script>
+</body>
+</html>
